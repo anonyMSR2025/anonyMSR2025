@@ -367,5 +367,5 @@ if __name__ == '__main__':
     test_metrics = [0.15, 0.25, 0.3, 0.6, 0.55]
     title = 'Test_Plot'
     metric_name = 'Test Metric'
-    plot_metrics(valid_metrics, test_metrics, title, metric_name)
+    #plot_metrics(valid_metrics, test_metrics, title, metric_name)
     

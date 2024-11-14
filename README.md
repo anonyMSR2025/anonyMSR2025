@@ -7,7 +7,7 @@ This is the anonymous code release for our MSR 2025 submission: **A Study on Usi
 
 ### 2. How to reproduce the code
 
-#### 0. Installing conda environment
+#### 0. Installing conda environment (python 3.10)
 
 Change the `/path/to/your/conda/envs/` in environment.yml, then run the following:
 

@@ -9,7 +9,7 @@ This is the anonymous code release for our MSR 2025 submission: **A Study on Usi
 
 #### 0. Installing conda environment
 
-Change the env path in environment.yml, then run the following:
+Change the `/path/to/your/conda/envs/` in environment.yml, then run the following:
 
 ```bash
 conda env create -f environment.yml
@@ -58,4 +58,9 @@ python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --m
 ```
 ### 3. Experimental results
 
+#### 1. The faithfulness score of TfIdf-Highlight vs LIME
+
+<img width="668" alt="image" src="https://github.com/user-attachments/assets/a1f0023a-04d7-4a49-9eeb-22e03554574c">
+
+#### 2. The trend of explainability score of TfIdf-Highlight vs LIME
 #### 3. Case study of TfIdf-Highlight vs LIME

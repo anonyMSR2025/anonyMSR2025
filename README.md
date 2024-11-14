@@ -68,14 +68,16 @@ python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --m
 
 #### 3. Case study of TfIdf-Highlight vs LIME
 
-This is a case study of the highlighted tokens by TfIdf-Highlight vs LIME. The following tokens are highlighted by LIME. LIME captures the word diff, src, 12 and vm. 
+This is a case study of the highlighted tokens by TfIdf-Highlight vs LIME. The following tokens are highlighted by LIME. 
 
 <img width="1122" alt="image" src="https://github.com/user-attachments/assets/8d18a45f-cbc2-43d6-89b3-d691e4968f12">
 
 
-The following tokens are highlighted by TfIdf-Highlight. TfIdf-Highlight captures only the word vm. 
+The following tokens are highlighted by TfIdf-Highlight.
 
 <img width="1070" alt="image" src="https://github.com/user-attachments/assets/f1786257-adc4-4196-b631-cb73012aec8e">
+
+By comparing TfIdf-Highlight and LIME, we can see that TfIdf-Highlight is good at capturing the similarity between CVE description and commit message; LIME captures stopwords such as "as". For code, TfIdf-Highlight only selects a few words. LIME also selects these words, but it also selects words that are not helpful, e.g., the SHA versions. 
 
 
 

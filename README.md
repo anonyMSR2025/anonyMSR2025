@@ -4,7 +4,14 @@ This is the anonymous code release for our MSR 2025 submission: **A Study on Usi
 
 #### 0. Installing conda environment
 
+Change the env path in environment.yml, then run the following:
 
+```bash
+conda env create -f environment.yml
+conda activate msr2025
+pip install numpy==1.23
+python -m spacy download en_core_web_sm
+```
 
 #### 1. Data processing
 

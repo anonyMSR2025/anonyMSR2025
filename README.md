@@ -1,10 +1,22 @@
 This is the anonymous code release for our MSR 2025 submission: **A Study on Using Explainable Retrieval for Assisting Vulnerability Patch Tracing**
 
-### 1. How to reproduce
+### 1. Data location
+
+1. A sample of the data collected (100 train, 100 test, 100 valid, Section IV) is located under `./Data/`. We will release the full dataset later. 
+2. The data of manual annotation is under `./manual_labeling_results/`
+
+### 2. How to reproduce the code
 
 #### 0. Installing conda environment
 
+Change the `/path/to/your/conda/envs/` in environment.yml, then run the following:
 
+```bash
+conda env create -f environment.yml
+conda activate msr2025
+pip install numpy==1.23
+python -m spacy download en_core_web_sm
+```
 
 #### 1. Data processing
 
@@ -44,7 +56,14 @@ python3 explain_with_lime.py --device cuda --path best_model_json/trace_params.j
 ```bash
 python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --max_length 256 --is_augment both --pooling_method cnn
 ```
+### 3. Experimental results
 
-#### 6. Manual labeling results
+#### 1. The faithfulness score of TfIdf-Highlight vs LIME
 
-The manual labeling results and code for aggregating the results are in ./manual_labeling_results/
+<img width="668" alt="image" src="https://github.com/user-attachments/assets/a1f0023a-04d7-4a49-9eeb-22e03554574c">
+
+#### 2. The trend of explainability score of TfIdf-Highlight vs LIME
+
+<img width="1033" alt="image" src="https://github.com/user-attachments/assets/e1d5ccbc-9f6b-40ad-b4fa-d33ad1bf0e8c">
+
+#### 3. Case study of TfIdf-Highlight vs LIME

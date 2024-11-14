@@ -1,6 +1,11 @@
 This is the anonymous code release for our MSR 2025 submission: **A Study on Using Explainable Retrieval for Assisting Vulnerability Patch Tracing**
 
-### 1. How to reproduce
+### 1. Data location
+
+1. A sample of the data collected (Section IV) is located under ./Data/
+2. The data of manual annotation is under `./manual_labeling_results/`
+
+### 2. How to reproduce the code
 
 #### 0. Installing conda environment
 
@@ -52,6 +57,3 @@ python3 explain_with_lime.py --device cuda --path best_model_json/trace_params.j
 python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --max_length 256 --is_augment both --pooling_method cnn
 ```
 
-#### 6. Manual labeling results
-
-The manual labeling results and code for aggregating the results are in ./manual_labeling_results/

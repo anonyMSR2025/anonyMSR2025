@@ -98,7 +98,7 @@ class modelPred():
             y_test = [ele[0] for ele in test_data] 
             encoder = LabelEncoder()
             encoder.classes_ = np.load(params['class_names'])
-            params['weights'] = class_weight.compute_class_weight('balanced',np.unique(y_test),y_test).astype('float32')
+            params['weights'] = class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(y_test), y=y_test).astype('float32')
 
         self.model = select_model(self.params, self.embeddings)
         

@@ -168,7 +168,6 @@ if __name__=='__main__':
 
     path = params_2_model_save_path(params)
     params['path_files'] = path
-    params['weights'] = class_weight.compute_class_weight('balanced', np.unique(y_test), y_test).astype('float32')  
     #params["beta"] = 0.8 if path_idx == 0 else 0.7
     device = params["device"]
     model_name_hyphen = params["model_name"].replace("/", "-")

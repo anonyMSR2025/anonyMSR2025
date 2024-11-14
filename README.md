@@ -2,7 +2,7 @@ This is the anonymous code release for our MSR 2025 submission: **A Study on Usi
 
 ### 1. Data location
 
-1. A sample of the data collected (Section IV) is located under `./Data/`
+1. A sample of the data collected (100 train, 100 test, 100 valid, Section IV) is located under `./Data/`. We will release the full dataset later. 
 2. The data of manual annotation is under `./manual_labeling_results/`
 
 ### 2. How to reproduce the code
@@ -63,4 +63,7 @@ python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --m
 <img width="668" alt="image" src="https://github.com/user-attachments/assets/a1f0023a-04d7-4a49-9eeb-22e03554574c">
 
 #### 2. The trend of explainability score of TfIdf-Highlight vs LIME
+
+<img width="1033" alt="image" src="https://github.com/user-attachments/assets/e1d5ccbc-9f6b-40ad-b4fa-d33ad1bf0e8c">
+
 #### 3. Case study of TfIdf-Highlight vs LIME

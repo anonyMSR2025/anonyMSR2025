@@ -4,7 +4,7 @@ import torch
 from knockknock import slack_sender
 # from transformers import *
 import glob 
-from transformers import BertTokenizer,RobertaTokenizerFast
+from transformers import RobertaTokenizerFast
 from transformers import BertForSequenceClassification, AdamW, BertConfig
 import random 
 import pandas as pd
@@ -266,7 +266,7 @@ def train_model(params,device):
         encoder = LabelEncoder()
         encoder.classes_ = np.load(params['class_names'], allow_pickle=True)
         print(encoder.classes_)
-        params['weights'] = class_weight.compute_class_weight('balanced', np.unique(y_test), y_test).astype('float32') 
+        params['weights'] = class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(y_test), y=y_test).astype('float32') 
         #print(f'weights: {params["weights"]}')
         # raise Exception('stop, check auto weights')
     

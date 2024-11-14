@@ -2,7 +2,7 @@ This is the anonymous code release for our MSR 2025 submission: **A Study on Usi
 
 ### 1. Data location
 
-1. A sample of the data collected (Section IV) is located under ./Data/
+1. A sample of the data collected (Section IV) is located under `./Data/`
 2. The data of manual annotation is under `./manual_labeling_results/`
 
 ### 2. How to reproduce the code
@@ -56,4 +56,6 @@ python3 explain_with_lime.py --device cuda --path best_model_json/trace_params.j
 ```bash
 python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --max_length 256 --is_augment both --pooling_method cnn
 ```
+### 3. Experimental results
 
+#### 3. Case study of TfIdf-Highlight vs LIME

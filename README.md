@@ -67,3 +67,15 @@ python3 compute_metrics.py --fold valid --attfirst --highlight_mode codeonly --m
 <img width="1033" alt="image" src="https://github.com/user-attachments/assets/e1d5ccbc-9f6b-40ad-b4fa-d33ad1bf0e8c">
 
 #### 3. Case study of TfIdf-Highlight vs LIME
+
+This is a case study of the highlighted tokens by TfIdf-Highlight vs LIME. The following tokens are highlighted by LIME. LIME captures the word diff, src, 12 and vm. 
+
+<img width="1122" alt="image" src="https://github.com/user-attachments/assets/8d18a45f-cbc2-43d6-89b3-d691e4968f12">
+
+
+The following tokens are highlighted by TfIdf-Highlight. TfIdf-Highlight captures only the word vm. 
+
+<img width="1070" alt="image" src="https://github.com/user-attachments/assets/f1786257-adc4-4196-b631-cb73012aec8e">
+
+
+

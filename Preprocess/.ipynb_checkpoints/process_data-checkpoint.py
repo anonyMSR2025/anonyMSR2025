@@ -348,9 +348,9 @@ def load_data(TOTAL_DATA_PATH):
             # print(cur_cve_data.keys())
             # raise Exception('stop here')
             # have maken sure that the commits are ordered by the bm25 score 
-            for index, (commit, label) in enumerate(zip(cur_cve_data['filtered_candidate_commits'], cur_cve_data['filtered_candidate_commit_labels']), start=1):
+            for index, (commit, label) in enumerate(zip(cur_cve_data['filtered_candidate_commits'], cur_cve_data['filtered_candidate_cimmit_labels']), start=1):
                 data.append({
-                    'cve_desc': cur_cve_data['cve_description'],
+                    'cve_desc': cur_cve_data['commit2str'][commit]['cve_description'],
                     'commit_msg': cur_cve_data['commit2str'][commit]['commit_msg'],
                     'diff': [diff for diff in cur_cve_data['commit2str'][commit]['diffs']],
                     'label': label,
@@ -364,7 +364,7 @@ def load_data(TOTAL_DATA_PATH):
             total_cve.append(cur_cve_data['cve'])
     return data, total_cve
 
-def split_data(data, test_size=0.3, train_thread_shold=120, test_thread_shold=130):
+def split_data(data, test_size=0.3, train_thread_shold=65, test_thread_shold=130):
     '''
     customized split function to ensure all commits of a cve are in the same set
         and ensure the propotion of test data is around given test_size
@@ -394,6 +394,12 @@ def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_r
         'TEST_DATA_PATH': TEST_DATA_PATH
     }
     exist_flag = True
+    for path in data_path.values():
+        if not os.path.exists(path):
+            exist_flag = False
+            break
+    if exist_flag:  # all files exist
+        return data_path
     if split:
         # Split the data into train and test
         data, total_cve = load_data(TOTAL_DATA_PATH)
@@ -456,11 +462,9 @@ if __name__ == "__main__":
         
     
     # step 1: extract train/test/valid json file
-    if args.step == 1:
-        prepareData(data_dir=args.data_dir, split=True)
+    #prepareData(data_dir=args.data_dir, split=True)
     # step 2: use tf-idf to compute cve_output_attention.xlsx
-    if args.step == 2:
-        rank_tokens(data_dir=args.data_dir)
+    #rank_tokens(data_dir=args.data_dir)
     
     # step 3: tokenize and merge tf-idf ranked tokens
     if args.step == 3:
@@ -471,6 +475,5 @@ if __name__ == "__main__":
     
     # train_data = collect_data(params)
 
-    # python process_data.py --data_dir ../Data/ --path ../best_model_json/trace_params.json --model_name microsoft/codebert-base
-    # python process_data.py --data_dir ../../timeFilter/output_data/ --model_name microsoft/codebert-base --path ../best_model_json/trace_params.json --step 1
+    # python process_data.py --data_dir ../Data/ --path ../best_model_json/trace_params.json
     

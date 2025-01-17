@@ -115,8 +115,7 @@ def split_by_camel_snake_and_lower(sentence, stop_tokens):
 def rank_tokens(data_dir):
     title_repo = json.load(open(os.path.join(data_dir, "cve_2_porject_info.json"), "r"))
 
-    if not os.path.exists(os.path.join(data_dir, 'token2df.json')):
-        get_df(data_dir, title_repo)
+    get_df(data_dir, title_repo)
     
     output_df_data = []
     cve2desc = json.load(open(os.path.join(data_dir, "cve2desc.json"), "r"))

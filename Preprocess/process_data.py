@@ -337,6 +337,38 @@ def load_cve_2_attention_tokens(threshold: float = 0.0, file_path :str = './cve_
         output_cve_2_attention_tokens[(cve, commit_id)] = attention_tokens
     return output_cve_2_attention_tokens
 
+def load_data_chatgpt_savememory(TOTAL_DATA_PATH):
+    data = []
+    total_cve = []
+
+    with open(TOTAL_DATA_PATH, 'r') as f:
+        for line in tqdm(f):
+            cur_cve_data = json.loads(line)
+
+            for index, (commit, label) in enumerate(zip(cur_cve_data['filtered_candidate_commits'], cur_cve_data['filtered_candidate_commit_labels']), start=1):
+                # 将每条记录直接添加到 data
+                data.append({
+                    'cve_desc': cur_cve_data['cve_description'],
+                    'commit_msg': cur_cve_data['commit2str'][commit]['commit_msg'],
+                    'diff': cur_cve_data['commit2str'][commit]['diffs'],
+                    'label': label,
+                    'cve': cur_cve_data['cve'],
+                    'rank': index,
+                    'commit': commit,
+                })
+
+            # 将当前 CVE 添加到 total_cve
+            total_cve.append(cur_cve_data['cve'])
+
+            # 清理当前数据以释放内存
+            cur_cve_data.clear()
+
+            # 如果内存使用过多，可以在这里定期释放内存
+            if len(data) > 50000:  # 设置一个合理的阈值（如 50000 条记录）
+                pass  # 不需要任何特殊处理，因为 data 不会清理（除非逻辑改变）
+
+    return data, total_cve
+
 
 def load_data(TOTAL_DATA_PATH):
     data = []
@@ -362,6 +394,7 @@ def load_data(TOTAL_DATA_PATH):
                 # diff_token_count.append(len(split_text(cur_cve_data['commit2str'][commit]['cve_description'] + ' [SEP] ' + cur_cve_data['commit2str'][commit]['diffs'])))
                 # vulfiles_token_count.append(len(split_text(cur_cve_data['commit2str'][commit]['cve_description'] + ' [SEP] ' + cur_cve_data['commit2str'][commit]['vulnerable_files'])))
             total_cve.append(cur_cve_data['cve'])
+            cur_cve_data.clear()
     return data, total_cve
 
 def split_data(data, test_size=0.3, train_thread_shold=120, test_thread_shold=130):
@@ -380,6 +413,31 @@ def split_data(data, test_size=0.3, train_thread_shold=120, test_thread_shold=13
         test_ratio = len(test_data) / len(data)
     return train_data, test_data
 
+def load_cve_2_porject_info(data_dir):
+    '''all necessary data for function sort_token'''
+    cve_2_porjecte = dict()
+    for fold in ["train", "test", "valid"]:
+        fin = open(os.path.join(data_dir, f"tf_idf_filtered_bert_input_{fold}.json"), "r")
+        for line in tqdm(fin, desc='Augement github_title_tokens and stored to ./cve_2_porject_info.json'):
+            data = json.loads(line)
+            if data['cve'] not in cve_2_porjecte:
+                owner, repo = data['owner_repo'].split('/')
+                cve_2_porjecte[data['cve']] = [{'cve': data['cve'], 'text': data['text'],
+                                                'owner_repo': data['owner_repo'], 'commit': data['commit'],
+                                                'label': data['label'],
+                                                'github_title_tokens': get_github_readme_title_tokens(owner, repo)
+                                                }]
+            else:
+                owner, repo = data['owner_repo'].split('/')
+                cve_2_porjecte[data['cve']].append({'cve': data['cve'], 'text': data['text'],
+                                                    'owner_repo': data['owner_repo'], 'commit': data['commit'],
+                                                    'label': data['label'],
+                                                    'github_title_tokens': get_github_readme_title_tokens(owner, repo)
+                                                    })
+    with open('./cve_2_porject_info.json', 'w') as fp:
+        json.dump(cve_2_porjecte, fp)
+    return cve_2_porjecte
+
 
 def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_ratio=30):
     TOTAL_DATA_PATH = os.path.join(data_dir, 'tf_idf_filtered_bert_input.json')
@@ -396,7 +454,7 @@ def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_r
     exist_flag = True
     if split:
         # Split the data into train and test
-        data, total_cve = load_data(TOTAL_DATA_PATH)
+        data, total_cve = load_data_chatgpt_savememory(TOTAL_DATA_PATH)
         print(f'length of data: {len(data)}')
         print(f'count of positive samples: {sum([d["label"] for d in data])}')
         print(f'positive rate: {sum([d["label"] for d in data]) / len(data)}')
@@ -458,15 +516,18 @@ if __name__ == "__main__":
     # step 1: extract train/test/valid json file
     if args.step == 1:
         prepareData(data_dir=args.data_dir, split=True)
-    # step 2: use tf-idf to compute cve_output_attention.xlsx
+
     if args.step == 2:
+        load_cve_2_porject_info(data_dir=args.data_dir)
+    # step 2: use tf-idf to compute cve_output_attention.xlsx
+    if args.step == 3:
         rank_tokens(data_dir=args.data_dir)
     
     # step 3: tokenize and merge tf-idf ranked tokens
-    if args.step == 3:
+    if args.step == 4:
        step3_tokenize(data_dir = args.data_dir, params=params)
 
-    if args.step == 4:
+    if args.step == 5:
        step4_rank_code_by_tfidf(data_dir = args.data_dir, params=params)
     
     # train_data = collect_data(params)

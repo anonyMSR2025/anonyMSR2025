@@ -1,0 +1,15 @@
+.DS_Store
+data/*
+repo/*
+processed_data/*
+repo_backup/*
+*.tar.gz
+.vscode/*
+__pycache__/*
+*.csv
+*.log
+*.png
+*.json
+*.txt
+*.pkl
+.ipynb_checkpoints/*

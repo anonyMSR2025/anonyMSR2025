@@ -75,7 +75,7 @@ def compute_faithfulness_tfidf(option, fold, filter_mode, params, suffix, param_
         list_dict = {}
         this_label = test_data_list[idx][0]
         annotation_id = test_post_ids[idx]
-        #if should_filter(annotation_id, this_label, filter_mode, manual_postid_list): continue
+        if should_filter(annotation_id, this_label, filter_mode, manual_postid_list): continue
         if annotation_id in ["CVE-2021-32803/46fe35083e2676e31c4e0a81639dce6da7aaa356", "CVE-2022-24799/d14455252a949dc83f36d45e2babbdd9328af2a4","CVE-2011-3371/dd50a50a2760f10bd2d09814e30af4b36052ca6d", "CVE-2021-32643/52e1890665410b4385e37b96bc49c5e3c708e4e9","CVE-2021-21272/96cd90423303f1bb42bd043cb4c36085e6e91e8e", "CVE-2021-41125/b01d69a1bf48060daec8f751368622352d8b85a6", "CVE-2022-24713/ae70b41d4f46641dbc45c7a4f87954aea356283e"]: continue
         if annotation_id not in id2text_codetopk: continue
 
@@ -193,7 +193,6 @@ def debug(test_dataloader, test_data_list, params, highlight_mode, fold, topk, t
     print(np.mean(gt_suff_score), np.mean(lime_suff_score), ttest_rel(gt_suff_score, lime_suff_score))
     print(np.mean(gt_comp_score), np.mean(lime_comp_score), ttest_rel(gt_comp_score, lime_comp_score)) #, np.mean(score_gt), np.mean(score_lime), np.mean(score_gt_comp), np.mean(score_lime_comp))
 
-    import pdb; pdb.set_trace()
     #return np.mean(gt_len), np.mean(score_gt), np.mean(score_gt_comp)
     return np.mean(lime_len), np.mean(score_lime), np.mean(score_lime_comp)
     
@@ -242,12 +241,12 @@ if __name__=='__main__':
     option = args.option #"tfidf" # option = reproduce: reproducing the sufficieny and comprehensiveness score in testing_with_lime; option = gt: use the ground truth to compute the sufficiency and comprehensiveness; option = "lime": get the sufficiency/comprehensive score for lime
     topk = args.topk
     highlight_mode = args.highlight_mode #"textonly"
-    filter_mode = "pos" # pos: use all positive example, manual: get the result for manual labeling
+    filter_mode = "manual" # "pos" # pos: use all positive example, manual: get the result for manual labeling
     fold = args.fold #"valid"
     params = return_params(args.path, args, load_trained_model=True)
 
     if filter_mode == "manual":
-        manual_postid_list = list(pandas.read_csv("./print/sampled_postids.csv", sep=",")["postids"])
+        manual_postid_list = list(pandas.read_csv("./print/sampled_postids4.csv", sep=",")["postids"])
 
     tokenizer = RobertaTokenizerFast.from_pretrained(params['model_name'])
     from sklearn.utils import class_weight
@@ -297,7 +296,7 @@ if __name__=='__main__':
 
         this_post_id = test_post_ids[step]
         #if label != 1: continue
-        #if should_filter(this_post_id, label, filter_mode, manual_postid_list): continue
+        if should_filter(this_post_id, label, filter_mode, manual_postid_list): continue
         b_sorted_idx = test_data_list[step][1]
         b_text_mask = batch[4][0].to(device)
         b_code_mask = batch[7][0][0].to(device)

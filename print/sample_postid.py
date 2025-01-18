@@ -3,11 +3,15 @@ import pandas
 import random
 random.seed(42)
 
+import sys
+
+fold = sys.argv[1]
+
 # 不能处理cve_desc_end_idx > 256的情况，要排除
 
 path = "../../traceability/backup/Data/"
 
-test_data = json.load(open(path + "Trace_microsoft-codebert-base/output_Dataset_test_ranked_attfirst.json", "r"))
+test_data = json.load(open(path + f"Trace_microsoft-codebert-base/output_Dataset_{fold}_ranked_attfirst.json", "r"))
 
 with open(path + "tfidf_result_2.json", "r") as fin:
     data = json.load(fin)

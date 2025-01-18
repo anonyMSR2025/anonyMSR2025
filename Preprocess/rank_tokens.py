@@ -39,7 +39,7 @@ def get_df(data_dir, title_repo):
                 token2df.setdefault(each_token, set([]))
                 token2df[each_token].add(cve)
             cve2desc[cve] = data["cve_desc"]
-            stop_tokens = title_repo[cve]["title"] + title_repo[cve]["owner_repo"].split("\/")
+            stop_tokens = title_repo[cve]["github_title_tokens"] + title_repo[cve]["owner_repo"].split("\/")
             commit_msg_tokens = split_by_camel_snake_and_lower(data["commit_msg"], stop_tokens).keys()
             diff_tokens = split_by_camel_snake_and_lower(" ".join(data["diff"]), stop_tokens).keys()
             commit_msg_tokens = set(commit_msg_tokens) #.intersection(cve_desc_tokens)
@@ -138,7 +138,7 @@ def rank_tokens(data_dir):
             cve = data["cve"]
             #commit_message_tokens = re.split(r"[\W_]+", data["commit_msg"].lower()) # cannot use camel/snake to split, too slow
             diff_tokens = re.split(r"[\W_]+", " ".join(data["diff"]).lower())
-            stop_tokens = title_repo[cve]["title"] + title_repo[cve]["owner_repo"].split("\/")
+            stop_tokens = title_repo[cve]["github_title_tokens"] + title_repo[cve]["owner_repo"].split("\/")
             cve_desc_tokens = split_by_camel_snake_and_lower(data["cve_desc"], stop_tokens)
             commit_msg_tokens = split_by_camel_snake_and_lower(data["commit_msg"], stop_tokens)
             diff_tokens = split_by_camel_snake_and_lower(" ".join(data["diff"]), stop_tokens)

@@ -27,6 +27,7 @@ from datasets import load_dataset, Dataset, load_from_disk, DatasetDict
 import argparse
 from tqdm import tqdm
 from Preprocess.rank_tokens import rank_tokens,split_by_camel_snake_and_lower
+from Preprocess.rank_token_preprocess import load_cve_2_porject_info
 tqdm.pandas()
 import random
 import swifter
@@ -45,6 +46,9 @@ def load_dataset_as_df(data_path):
     data_df = pd.DataFrame(data)
     print(f'columens: {data_df.columns}')   
     return data_df
+
+# def get_github_readme_title_tokens():
+#     pass
 
 def process_token(each_token):
     return re.sub(r'[^a-z]', '', re.sub(r'[^\x00-\x7F]+', '', each_token.lower().replace("_", "")))
@@ -337,20 +341,23 @@ def load_cve_2_attention_tokens(threshold: float = 0.0, file_path :str = './cve_
         output_cve_2_attention_tokens[(cve, commit_id)] = attention_tokens
     return output_cve_2_attention_tokens
 
-def load_data_chatgpt_savememory(TOTAL_DATA_PATH):
+def load_data_savememory(TOTAL_DATA_PATH):
+    '''
+    only load metadata
+    '''
     data = []
     total_cve = []
 
     with open(TOTAL_DATA_PATH, 'r') as f:
-        for line in tqdm(f):
+        for line in tqdm(f, desc='load metadata'):
             cur_cve_data = json.loads(line)
 
             for index, (commit, label) in enumerate(zip(cur_cve_data['filtered_candidate_commits'], cur_cve_data['filtered_candidate_commit_labels']), start=1):
                 # 将每条记录直接添加到 data
                 data.append({
-                    'cve_desc': cur_cve_data['cve_description'],
-                    'commit_msg': cur_cve_data['commit2str'][commit]['commit_msg'],
-                    'diff': cur_cve_data['commit2str'][commit]['diffs'],
+                    # 'cve_desc': cur_cve_data['cve_description'],
+                    # 'commit_msg': cur_cve_data['commit2str'][commit]['commit_msg'],
+                    # 'diff': cur_cve_data['commit2str'][commit]['diffs'],
                     'label': label,
                     'cve': cur_cve_data['cve'],
                     'rank': index,
@@ -404,7 +411,7 @@ def split_data(data, test_size=0.3, train_thread_shold=120, test_thread_shold=13
     '''
     test_ratio = 1
     total_cve = list(set([item['cve'] for item in data]))
-    while abs(test_ratio - 0.3) > 0.05:
+    while abs(test_ratio - test_size) > 0.05:
         random.shuffle(total_cve)
         test_cve = total_cve[:int(len(total_cve) * test_size)]
         train_cve = total_cve[int(len(total_cve) * test_size):]
@@ -413,30 +420,60 @@ def split_data(data, test_size=0.3, train_thread_shold=120, test_thread_shold=13
         test_ratio = len(test_data) / len(data)
     return train_data, test_data
 
-def load_cve_2_porject_info(data_dir):
-    '''all necessary data for function sort_token'''
-    cve_2_porjecte = dict()
-    for fold in ["train", "test", "valid"]:
-        fin = open(os.path.join(data_dir, f"tf_idf_filtered_bert_input_{fold}.json"), "r")
-        for line in tqdm(fin, desc='Augement github_title_tokens and stored to ./cve_2_porject_info.json'):
-            data = json.loads(line)
-            if data['cve'] not in cve_2_porjecte:
-                owner, repo = data['owner_repo'].split('/')
-                cve_2_porjecte[data['cve']] = [{'cve': data['cve'], 'text': data['text'],
-                                                'owner_repo': data['owner_repo'], 'commit': data['commit'],
-                                                'label': data['label'],
-                                                'github_title_tokens': get_github_readme_title_tokens(owner, repo)
-                                                }]
-            else:
-                owner, repo = data['owner_repo'].split('/')
-                cve_2_porjecte[data['cve']].append({'cve': data['cve'], 'text': data['text'],
-                                                    'owner_repo': data['owner_repo'], 'commit': data['commit'],
-                                                    'label': data['label'],
-                                                    'github_title_tokens': get_github_readme_title_tokens(owner, repo)
-                                                    })
-    with open('./cve_2_porject_info.json', 'w') as fp:
-        json.dump(cve_2_porjecte, fp)
-    return cve_2_porjecte
+def split_diff_by_file(diff_content):
+    if isinstance(diff_content, list):
+        return diff_content
+    file_diff_pattern = r"(?=diff --git a/.*)"
+    file_diffs = re.split(file_diff_pattern, diff_content)
+    file_diffs = [diff.strip() for diff in file_diffs if diff.strip()]
+    
+    # import pdb; pdb.set_trace()
+    return file_diffs
+
+def apply_partition(TOTAL_DATA_PATH, TRAIN_DATA_PATH, VALID_DATA_PATH, TEST_DATA_PATH, DOWNSAMPLED_TRAIN_DATA_PATH, partition_d):
+    train_data_output_f = open(TRAIN_DATA_PATH, 'w')
+    valid_data_output_f = open(VALID_DATA_PATH, 'w')
+    test_data_output_f = open(TEST_DATA_PATH, 'w')
+    downsampled_train_data_output_f = open(DOWNSAMPLED_TRAIN_DATA_PATH, 'w')
+
+    skipped_commit_count = 0
+
+    with open(TOTAL_DATA_PATH, 'r') as f:
+        for line in tqdm(f, desc='apply partition'):  
+            cur_cve_data = json.loads(line)
+            # have maken sure that the commits are ordered by the bm25 score
+            owner = cur_cve_data['owner']
+            repo = cur_cve_data['repo']
+            for index, (commit, label) in enumerate(zip(cur_cve_data['filtered_candidate_commits'], cur_cve_data['filtered_candidate_commit_labels']), start=1):
+                cur_data = {
+                    'cve_desc': cur_cve_data['cve_description'],
+                    'commit_msg': cur_cve_data['commit2str'][commit]['commit_msg'],
+                    'diff': split_diff_by_file(cur_cve_data['commit2str'][commit]['diffs']),
+                    'owner_repo': f"{owner}/{repo}",
+                    'label': label,
+                    'cve': cur_cve_data['cve'],
+                    'rank': index,
+                    'commit': commit,
+                }
+                partition_k = f"{cur_cve_data['cve']}/{commit}"
+                if partition_k not in partition_d:
+                    skipped_commit_count += 1
+                    continue
+
+                if partition_d[partition_k] == 'train':
+                    train_data_output_f.write(json.dumps(cur_data) + '\n')
+                elif partition_d[partition_k] == 'valid':
+                    valid_data_output_f.write(json.dumps(cur_data) + '\n')
+                elif partition_d[partition_k] == 'test':
+                    test_data_output_f.write(json.dumps(cur_data) + '\n')
+                elif partition_d[partition_k] == 'train_downsample':
+                    output_str = json.dumps(cur_data)
+                    train_data_output_f.write(output_str + '\n')
+                    downsampled_train_data_output_f.write(output_str + '\n')
+                # else:
+                    # import pdb; pdb.set_trace()
+
+    print(f'skipped commit count: {skipped_commit_count}')
 
 
 def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_ratio=30):
@@ -454,7 +491,7 @@ def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_r
     exist_flag = True
     if split:
         # Split the data into train and test
-        data, total_cve = load_data_chatgpt_savememory(TOTAL_DATA_PATH)
+        data, total_cve = load_data_savememory(TOTAL_DATA_PATH)
         print(f'length of data: {len(data)}')
         print(f'count of positive samples: {sum([d["label"] for d in data])}')
         print(f'positive rate: {sum([d["label"] for d in data]) / len(data)}')
@@ -463,27 +500,29 @@ def prepareData(data_dir, split: bool = False, random_state: int = 42, balance_r
         # train_data, test_data = train_test_split(data, test_size=0.3, random_state=42)
         train_valid_data, test_data = split_data(data)
         train_data, valid_data = split_data(train_valid_data)
-        with open(TRAIN_DATA_PATH, 'w') as f:
-            for line in train_data:
-                f.write(json.dumps(line) + '\n')
-        print('train data saved')
-        with open(VALID_DATA_PATH, 'w') as f:
-            for line in valid_data:
-                f.write(json.dumps(line) + '\n')
-        print('valid data saved')
-        with open(TEST_DATA_PATH, 'w') as f:
-            for line in test_data:
-                f.write(json.dumps(line) + '\n')
-        print('test data saved')
+        # import pdb; pdb.set_trace()
+        # save partition
+        partition_d = dict()
+        for item in train_data:
+            partition_d[f"{item['cve']}/{item['commit']}"] = 'train'
+        for item in valid_data:
+            partition_d[f"{item['cve']}/{item['commit']}"] = 'valid'
+        for item in test_data:
+            partition_d[f"{item['cve']}/{item['commit']}"] = 'test'
+        
+
         # down sample train dataset
         negative_samples = [sample for sample in train_data if sample['label'] == 0]
         positive_samples = [sample for sample in train_data if sample['label'] == 1]
         downsampled_negative_samples = random.sample(negative_samples, int(len(positive_samples)) * balance_ratio) # balance the dataset, negative samples are [balance_ratio] times of positive samples
         downsampled_train_dataset = positive_samples + downsampled_negative_samples
-        with open(DOWNSAMPLED_TRAIN_DATA_PATH, 'w') as fp:
-            for line in downsampled_train_dataset:
-                fp.write(json.dumps(line) + '\n')
-        print('downsampled train data saved')
+        for item in downsampled_train_dataset:
+            partition_d[f"{item['cve']}/{item['commit']}"] = 'train_downsample'
+        with open('./partition_d.json', 'w') as f:
+            json.dump(partition_d, f)
+        # import pdb; pdb.set_trace()
+
+        apply_partition(TOTAL_DATA_PATH, TRAIN_DATA_PATH, VALID_DATA_PATH, TEST_DATA_PATH, DOWNSAMPLED_TRAIN_DATA_PATH, partition_d)
         return data_path
 
     # no need to return dataset object

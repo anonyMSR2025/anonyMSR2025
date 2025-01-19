@@ -295,13 +295,14 @@ def step3_tokenize(data_dir, params):  # use output of step1 and step2
        this_data_set = load_dataset('json', data_files=data_path[f'{suffix2}_DATA_PATH'])["train"]
 
        this_data_df = this_data_set.to_pandas()
+       import pdb; pdb.set_trace()
        # remove examples where there are too many files in diff code
        diff_list = []
        for x in range(len(this_data_df)):
            diff_list.append(this_data_df["diff"].iloc[x][:max_diff_code_size])
        this_data_df["diff"] = diff_list
-
-       this_data_df.drop(columns=["cve_attention_tokens"], inplace=True)
+       if "cve_attention_tokens" in this_data_df.columns:
+            this_data_df.drop(columns=["cve_attention_tokens"], inplace=True)
        this_data_df["cve_attention"] = cve_sep_list
        this_data_df["commit_attention"] = commit_msg_list
        this_data_df["diff_code_attention"] = diff_sep_str_list
